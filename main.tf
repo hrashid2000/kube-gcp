@@ -44,7 +44,3 @@ resource "google_container_node_pool" "primary_nodes" {
 
   initial_node_count = 2
 }
-
-resource "aws_s3_bucket" "example" {
-  bucket = "hamzazipfilebucket"
-}
