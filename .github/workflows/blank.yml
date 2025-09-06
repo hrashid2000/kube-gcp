@@ -1,0 +1,70 @@
+name: terraform zip and deploy
+
+on:
+  push:
+    branches: ["main"]
+
+jobs:
+  zip:
+    runs-on: ubuntu-latest
+    env:
+      GOOGLE_PROJECT_ID: ${{ secrets.GCP_PROJECT_ID }}
+      GOOGLE_APPLICATION_CREDENTIALS: ${{ secrets.GCP_SA_KEY }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v3
+
+      - name: Terraform Init
+        run: terraform init
+
+      - name: Terraform Plan
+        run: terraform plan -out=tfplan
+
+      - name: Zip Terraform Files + Plan
+        run: zip -r terraform-build.zip . tfplan
+
+      - name: Upload to gcs
+        run: gsutil cp terraform-build.zip gs://hamza-build-bucket/terraform-build.zip
+        env:
+          GOOGLE_PROJECT_ID: ${{ secrets.GCP_PROJECT_ID }}
+          GOOGLE_APPLICATION_CREDENTIALS: ${{ secrets.GCP_SA_KEY }}
+
+  download_and_deploy:
+    runs-on: ubuntu-latest
+    needs: zip
+    env:
+      GOOGLE_PROJECT_ID: ${{ secrets.GCP_PROJECT_ID }}
+      GOOGLE_APPLICATION_CREDENTIALS: ${{ secrets.GCP_SA_KEY }}
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v3
+
+      - name: Download from gcs
+        run: gsutil cp gs://hamza-build-bucket/terraform-build.zip terraform-build.zip
+        env:
+          GOOGLE_PROJECT_ID: ${{ secrets.GCP_PROJECT_ID }}
+          GOOGLE_APPLICATION_CREDENTIALS: ${{ secrets.GCP_SA_KEY }}
+
+      - name: Unzip
+        run: unzip -o terraform-build.zip -d .
+
+      - name: Terraform Init
+        run: terraform init
+
+      - name: Terraform Apply
+        run: terraform apply -auto-approve tfplan
+
+      - name: Terraform Destroy
+        run: terraform destroy -auto-approve
+
+
+
+  
+
