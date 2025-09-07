@@ -1,5 +1,5 @@
 name: terraform zip and deploy
- 
+
 on:
   push:
     branches: ["main"]
@@ -33,9 +33,9 @@ jobs:
 
       - name: Upload to gcs
         run: gsutil cp terraform-build.zip gs://hamza-build-bucket/terraform-build.zip
-        env:
-          GOOGLE_PROJECT_ID: ${{ secrets.GCP_PROJECT_ID }}
-          GOOGLE_APPLICATION_CREDENTIALS: ${{ secrets.GCP_SA_KEY }}
+        #env:
+         # GOOGLE_PROJECT_ID: ${{ secrets.GCP_PROJECT_ID }}
+          #GOOGLE_APPLICATION_CREDENTIALS: ${{ secrets.GCP_SA_KEY }}
 
   download_and_deploy:
     runs-on: ubuntu-latest
