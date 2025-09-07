@@ -1,5 +1,5 @@
 resource "google_compute_network" "vpc" {
-  name                    = "main-vpc"
+  name                    = "gke-main-vpc"
   auto_create_subnetworks = false
 }
 
@@ -15,10 +15,6 @@ resource "google_compute_subnetwork" "private" {
   ip_cidr_range = "10.0.2.0/24"
   region        = "us-east1"
   network       = google_compute_network.vpc.id
-}
-
-resource "google_service_account" "gke_nodes" {
-  account_id = "gke-node-sa"
 }
 
 resource "google_container_cluster" "primary" {
@@ -39,7 +35,7 @@ resource "google_container_node_pool" "primary_nodes" {
   node_config {
     machine_type    = "e2-micro"
     service_account = google_service_account.gke_nodes.email
-    disk_size_gb    = 30
+    disk_size_gb    = 10
   }
 
   initial_node_count = 2
