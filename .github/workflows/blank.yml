@@ -16,11 +16,6 @@ jobs:
 
       - name: Setup Terraform
         uses: hashicorp/setup-terraform@v3
-      
-      - name: Auth with GCP
-        uses: google-github-actions/auth@v2
-        with:
-          credentials_json: ${{ secrets.GCP_SA_KEY }}
 
       - name: Terraform Init
         run: terraform init
