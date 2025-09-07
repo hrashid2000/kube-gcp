@@ -17,11 +17,6 @@ jobs:
       - name: Setup Terraform
         uses: hashicorp/setup-terraform@v3
 
-      #- name: Auth with GCP (write JSON to file)
-       # run: |
-       #   echo '${{ secrets.GCP_SA_KEY }}' > $HOME/gcp-key.json
-       #   echo "GOOGLE_APPLICATION_CREDENTIALS=$HOME/gcp-key.json" >> $GITHUB_ENV
-
       - name: Write service account key
         run: |
           echo '${{ secrets.GCP_SA_KEY }}' > $HOME/gcp-key.json
@@ -32,7 +27,7 @@ jobs:
           gcloud auth activate-service-account --key-file=$HOME/gcp-key.json
           gcloud config set project ${{ secrets.GCP_PROJECT_ID }}
           gcloud auth list
-          
+
       - name: Terraform Init
         run: terraform init
 
@@ -44,16 +39,10 @@ jobs:
 
       - name: Upload to gcs
         run: gsutil cp terraform-build.zip gs://hamza-build-bucket/terraform-build.zip
-        #env:
-         # GOOGLE_PROJECT_ID: ${{ secrets.GCP_PROJECT_ID }}
-          #GOOGLE_APPLICATION_CREDENTIALS: ${{ secrets.GCP_SA_KEY }}
 
   download_and_deploy:
     runs-on: ubuntu-latest
     needs: zip
-    #env:
-     # GOOGLE_PROJECT_ID: ${{ secrets.GCP_PROJECT_ID }}
-      #GOOGLE_APPLICATION_CREDENTIALS: ${{ secrets.GCP_SA_KEY }}
 
     steps:
       - name: Checkout
@@ -62,11 +51,19 @@ jobs:
       - name: Setup Terraform
         uses: hashicorp/setup-terraform@v3
 
+      - name: Write service account key
+        run: |
+          echo '${{ secrets.GCP_SA_KEY }}' > $HOME/gcp-key.json
+          echo "GOOGLE_APPLICATION_CREDENTIALS=$HOME/gcp-key.json" >> $GITHUB_ENV
+
+      - name: Activate service account
+        run: |
+          gcloud auth activate-service-account --key-file=$HOME/gcp-key.json
+          gcloud config set project ${{ secrets.GCP_PROJECT_ID }}
+          gcloud auth list
+
       - name: Download from gcs
         run: gsutil cp gs://hamza-build-bucket/terraform-build.zip terraform-build.zip
-        #env:
-          #GOOGLE_PROJECT_ID: ${{ secrets.GCP_PROJECT_ID }}
-          #GOOGLE_APPLICATION_CREDENTIALS: ${{ secrets.GCP_SA_KEY }}
 
       - name: Unzip
         run: unzip -o terraform-build.zip -d .
