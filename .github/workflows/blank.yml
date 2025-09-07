@@ -7,15 +7,20 @@ on:
 jobs:
   zip:
     runs-on: ubuntu-latest
-    env:
-      GOOGLE_PROJECT_ID: ${{ secrets.GCP_PROJECT_ID }}
-      GOOGLE_APPLICATION_CREDENTIALS: ${{ secrets.GCP_SA_KEY }}
+    #env:
+      #GOOGLE_PROJECT_ID: ${{ secrets.GCP_PROJECT_ID }}
+      #GOOGLE_APPLICATION_CREDENTIALS: ${{ secrets.GCP_SA_KEY }}
     steps:
       - name: Checkout
         uses: actions/checkout@v4
 
       - name: Setup Terraform
         uses: hashicorp/setup-terraform@v3
+
+      - name: Auth with GCP (write JSON to file)
+        run: |
+          echo '${{ secrets.GCP_SA_KEY }}' > $HOME/gcp-key.json
+          echo "GOOGLE_APPLICATION_CREDENTIALS=$HOME/gcp-key.json" >> $GITHUB_ENV
 
       - name: Terraform Init
         run: terraform init
@@ -28,16 +33,16 @@ jobs:
 
       - name: Upload to gcs
         run: gsutil cp terraform-build.zip gs://hamza-build-bucket/terraform-build.zip
-        env:
-          GOOGLE_PROJECT_ID: ${{ secrets.GCP_PROJECT_ID }}
-          GOOGLE_APPLICATION_CREDENTIALS: ${{ secrets.GCP_SA_KEY }}
+        #env:
+         # GOOGLE_PROJECT_ID: ${{ secrets.GCP_PROJECT_ID }}
+         # GOOGLE_APPLICATION_CREDENTIALS: ${{ secrets.GCP_SA_KEY }}
 
   download_and_deploy:
     runs-on: ubuntu-latest
     needs: zip
-    env:
-      GOOGLE_PROJECT_ID: ${{ secrets.GCP_PROJECT_ID }}
-      GOOGLE_APPLICATION_CREDENTIALS: ${{ secrets.GCP_SA_KEY }}
+    #env:
+     # GOOGLE_PROJECT_ID: ${{ secrets.GCP_PROJECT_ID }}
+      #GOOGLE_APPLICATION_CREDENTIALS: ${{ secrets.GCP_SA_KEY }}
 
     steps:
       - name: Checkout
@@ -48,9 +53,9 @@ jobs:
 
       - name: Download from gcs
         run: gsutil cp gs://hamza-build-bucket/terraform-build.zip terraform-build.zip
-        env:
-          GOOGLE_PROJECT_ID: ${{ secrets.GCP_PROJECT_ID }}
-          GOOGLE_APPLICATION_CREDENTIALS: ${{ secrets.GCP_SA_KEY }}
+        #env:
+          #GOOGLE_PROJECT_ID: ${{ secrets.GCP_PROJECT_ID }}
+          #GOOGLE_APPLICATION_CREDENTIALS: ${{ secrets.GCP_SA_KEY }}
 
       - name: Unzip
         run: unzip -o terraform-build.zip -d .
